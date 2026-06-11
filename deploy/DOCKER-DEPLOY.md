@@ -1,4 +1,4 @@
-# Docker + CI/CD Deploy — kiyim-chechak.kahoot.uz
+# Docker + CI/CD Deploy — kiyim-kechak.kahoot.uz
 
 Production deployment using Docker Compose on Ubuntu EC2, host Nginx for domain/SSL, and GitHub Actions for CI/CD.
 
@@ -27,7 +27,7 @@ EC2 (Ubuntu) — ports 80/443
 | Item | Value |
 |------|-------|
 | EC2 | Ubuntu 22.04 or 24.04 |
-| Domain | `kiyim-chechak.kahoot.uz` A record → EC2 public IP |
+| Domain | `kiyim-kechak.kahoot.uz` A record → EC2 public IP |
 | Database | Render PostgreSQL (or any external Postgres) |
 | Docker Hub | Account with `kiyim-chechak-backend` and `kiyim-chechak-frontend` repos |
 | GitHub Secrets | See [GITHUB-SECRETS.md](GITHUB-SECRETS.md) |
@@ -47,14 +47,14 @@ Do **not** open port 3000 or 8080 publicly — backend and frontend Docker ports
 Point your subdomain to the EC2 public IP:
 
 ```
-kiyim-chechak.kahoot.uz  A  <EC2_PUBLIC_IP>
+kiyim-kechak.kahoot.uz  A  <EC2_PUBLIC_IP>
 ```
 
 Verify from your machine:
 
 ```bash
-nslookup kiyim-chechak.kahoot.uz
-curl -I http://kiyim-chechak.kahoot.uz
+nslookup kiyim-kechak.kahoot.uz
+curl -I http://kiyim-kechak.kahoot.uz
 ```
 
 ## 2. GitHub Secrets
@@ -62,7 +62,7 @@ curl -I http://kiyim-chechak.kahoot.uz
 Configure all secrets listed in [GITHUB-SECRETS.md](GITHUB-SECRETS.md), including the new `APP_DOMAIN` secret:
 
 ```
-APP_DOMAIN=kiyim-chechak.kahoot.uz
+APP_DOMAIN=kiyim-kechak.kahoot.uz
 ```
 
 ## 3. First Deploy (Automatic via GitHub Actions)
@@ -74,7 +74,7 @@ The workflow will:
 1. Build and push Docker images to Docker Hub
 2. SSH into EC2, install Docker + Nginx if missing
 3. Clone/update the repo at `/var/www/kiyim-chechak`
-4. Write production `.env` with `CORS_ORIGIN=https://kiyim-chechak.kahoot.uz`
+4. Write production `.env` with `CORS_ORIGIN=https://kiyim-kechak.kahoot.uz`
 5. Install host Nginx config from `deploy/nginx/kiyim-chechak-docker.conf`
 6. Pull images and run `docker compose up -d`
 7. Run `prisma migrate deploy` inside the backend container
@@ -88,10 +88,10 @@ After the first successful deploy (HTTP must work first):
 ssh -i "your-key.pem" ubuntu@EC2_PUBLIC_IP
 
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d kiyim-chechak.kahoot.uz
+sudo certbot --nginx -d kiyim-kechak.kahoot.uz
 ```
 
-Certbot updates the host Nginx config automatically. CORS is already set to `https://kiyim-chechak.kahoot.uz` by CI/CD — no manual backend restart needed unless you change the domain.
+Certbot updates the host Nginx config automatically. CORS is already set to `https://kiyim-kechak.kahoot.uz` by CI/CD — no manual backend restart needed unless you change the domain.
 
 Renewal is automatic via certbot timer:
 
@@ -104,7 +104,7 @@ sudo certbot renew --dry-run
 ```bash
 # On EC2
 curl http://127.0.0.1:8080/api/health
-curl https://kiyim-chechak.kahoot.uz/api/health
+curl https://kiyim-kechak.kahoot.uz/api/health
 
 sudo docker compose --env-file /var/www/kiyim-chechak/deploy/.env \
   -f /var/www/kiyim-chechak/deploy/docker-compose.prod.yml ps
@@ -112,7 +112,7 @@ sudo docker compose --env-file /var/www/kiyim-chechak/deploy/.env \
 sudo nginx -t
 ```
 
-In browser: `https://kiyim-chechak.kahoot.uz`
+In browser: `https://kiyim-kechak.kahoot.uz`
 
 Default admin (if database was seeded):
 
@@ -134,7 +134,9 @@ sudo apt install -y nginx
 sudo cp /var/www/kiyim-chechak/deploy/nginx/kiyim-chechak-docker.conf /etc/nginx/sites-available/kiyim-chechak
 sudo ln -sf /etc/nginx/sites-available/kiyim-chechak /etc/nginx/sites-enabled/kiyim-chechak
 sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
+sudo nginx -t
+sudo systemctl enable nginx
+sudo systemctl restart nginx
 ```
 
 Then push to GitHub to trigger the full Docker deploy.
@@ -151,7 +153,7 @@ sudo nano /etc/nginx/sites-available/kiyim-chechak
 Expected values:
 
 ```nginx
-server_name kiyim-chechak.kahoot.uz;
+server_name kiyim-kechak.kahoot.uz;
 proxy_pass http://127.0.0.1:8080;
 ```
 
@@ -180,12 +182,12 @@ sudo docker compose --env-file /var/www/kiyim-chechak/deploy/.env \
 | Problem | Solution |
 |---------|----------|
 | `502 Bad Gateway` | Check containers: `docker compose ps`. Frontend must listen on `127.0.0.1:8080`. |
-| CORS error | Ensure `CORS_ORIGIN=https://kiyim-chechak.kahoot.uz` in `deploy/.env` and redeploy. |
+| CORS error | Ensure `CORS_ORIGIN=https://kiyim-kechak.kahoot.uz` in `deploy/.env` and redeploy. |
 | Certbot fails | DNS must point to EC2. Port 80 must be open. Nginx must be running. |
 | DB auth failed (`P1000`) | Verify `DATABASE_URL` in GitHub secret. |
 | DB connection closed (`P1017`) | Wake Render DB from dashboard. |
 | Migration failed | Check backend logs; run migrate manually (see above). |
-| Domain shows default Nginx page | Remove `/etc/nginx/sites-enabled/default`, reload Nginx. |
+| Domain shows default Nginx page | Remove `/etc/nginx/sites-enabled/default`, restart Nginx. |
 
 ## Alternative: Manual Nginx + systemd
 

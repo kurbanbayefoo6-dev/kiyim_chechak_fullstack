@@ -48,8 +48,10 @@ npm run build
 echo "==> Restarting backend service..."
 sudo systemctl restart kiyim-chechak-backend
 
-echo "==> Reloading Nginx..."
-sudo nginx -t && sudo systemctl reload nginx
+echo "==> Restarting Nginx..."
+sudo nginx -t
+sudo systemctl enable nginx
+sudo systemctl restart nginx
 
 echo "==> Deploy complete!"
 echo "    Health check: curl http://localhost/api/health"

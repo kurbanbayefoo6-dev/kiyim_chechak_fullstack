@@ -109,7 +109,7 @@ jobs:
             sudo rm -f /etc/nginx/sites-enabled/default
             sudo nginx -t
             sudo systemctl enable nginx
-            sudo systemctl reload nginx
+            sudo systemctl restart nginx
 
             sudo usermod -aG docker ubuntu 2>/dev/null || true
 

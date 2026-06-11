@@ -15,7 +15,7 @@ Add or update the secrets below. Never commit passwords or keys to the repo.
 | `EC2_USER` | `ubuntu` | SSH user for Ubuntu EC2 |
 | `EC2_SSH_KEY` | Full `.pem` file contents | From `-----BEGIN ... KEY-----` to `-----END ... KEY-----` |
 | `JWT_SECRET` | Random 32+ chars | `openssl rand -base64 32` |
-| `APP_DOMAIN` | `kiyim-chechak.kahoot.uz` | Public domain (no `https://`) — used for CORS and health checks |
+| `APP_DOMAIN` | `kiyim-kechak.kahoot.uz` | Public domain (no `https://`) — used for CORS and health checks |
 
 ### DOCKER_PASSWORD — create an Access Token
 
@@ -45,7 +45,7 @@ Render dashboard → PostgreSQL → **External Database URL**
 Your production subdomain. The workflow sets:
 
 ```env
-CORS_ORIGIN=https://kiyim-chechak.kahoot.uz
+CORS_ORIGIN=https://kiyim-kechak.kahoot.uz
 ```
 
 If you change domains, update this secret and redeploy.
@@ -97,7 +97,7 @@ After the first CI/CD deploy succeeds over HTTP:
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d kiyim-chechak.kahoot.uz
+sudo certbot --nginx -d kiyim-kechak.kahoot.uz
 ```
 
 CORS is already configured for HTTPS by the workflow.

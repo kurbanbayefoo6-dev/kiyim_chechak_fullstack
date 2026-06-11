@@ -20,7 +20,7 @@ Each package has its own `package.json`; run `npm install` and npm scripts from 
 
 ### Docker + GitHub Actions (recommended)
 
-Domain: `https://kiyim-chechak.kahoot.uz`
+Domain: `https://kiyim-kechak.kahoot.uz`
 
 On push to `master` / `main`:
 
