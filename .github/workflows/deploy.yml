@@ -150,5 +150,5 @@ jobs:
             echo "Checking local container health..."
             curl -sf http://127.0.0.1:8080/api/health
             echo ""
-            echo "Checking public domain health..."
-            curl -sf "https://${APP_DOMAIN}/api/health" || curl -sf "http://${APP_DOMAIN}/api/health"
+            echo "Checking public domain health over HTTP..."
+            curl -sf --max-time 15 "http://${APP_DOMAIN}/api/health"
