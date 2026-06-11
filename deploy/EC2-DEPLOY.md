@@ -1,5 +1,8 @@
 # AWS Ubuntu EC2 — Deploy Qo'llanmasi
 
+> **Docker + CI/CD (tavsiya etiladi):** [DOCKER-DEPLOY.md](DOCKER-DEPLOY.md)  
+> Quyidagi qo'llanma — qo'lda Nginx + systemd usuli (Docker siz).
+
 Kiyim Chechak full-stack loyihasini bitta Ubuntu EC2 serverga joylash.
 
 ## Arxitektura

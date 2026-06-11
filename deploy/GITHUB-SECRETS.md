@@ -1,104 +1,103 @@
 # GitHub Repository Secrets
 
-So'z: **Settings → Secrets and variables → Actions → Repository secrets**
+Path: **Settings → Secrets and variables → Actions → Repository secrets**
 
-Quyidagi secretlarni qo'shing yoki yangilang. Parollarni repoga commit qilmang.
+Add or update the secrets below. Never commit passwords or keys to the repo.
 
-## Majburiy secretlar
+## Required secrets
 
-| Secret nomi | Qanday qiymat | Izoh |
-|-------------|---------------|------|
-| `DOCKER_USERNAME` | Docker Hub **username** (email emas!) | `kurbanbayef1` |
-| `DOCKER_PASSWORD` | Docker Hub **Access Token** | Account paroli emas — token yarating (quyida) |
+| Secret | Example value | Notes |
+|--------|---------------|-------|
+| `DOCKER_USERNAME` | `kurbanbayef1` | Docker Hub **username** (not email) |
+| `DOCKER_PASSWORD` | `dckr_pat_...` | Docker Hub **Access Token** (Read & Write) |
+| `DATABASE_URL` | `postgresql://USER:PASS@HOST/DB?schema=public&sslmode=require` | Render External Database URL |
+| `EC2_HOST` | `13.45.67.89` | EC2 public IP only (no `http://`) |
+| `EC2_USER` | `ubuntu` | SSH user for Ubuntu EC2 |
+| `EC2_SSH_KEY` | Full `.pem` file contents | From `-----BEGIN ... KEY-----` to `-----END ... KEY-----` |
+| `JWT_SECRET` | Random 32+ chars | `openssl rand -base64 32` |
+| `APP_DOMAIN` | `kiyim-chechak.kahoot.uz` | Public domain (no `https://`) — used for CORS and health checks |
 
-### DOCKER_PASSWORD — Access Token yaratish (majburiy)
+### DOCKER_PASSWORD — create an Access Token
 
-GitHub Actions da oddiy parol ko'pincha ishlamaydi (`unauthorized: incorrect username or password`).
+GitHub Actions often fails with plain Docker Hub passwords (`unauthorized`).
 
-1. [hub.docker.com/settings/security](https://hub.docker.com/settings/security) ga kiring
+1. Open [hub.docker.com/settings/security](https://hub.docker.com/settings/security)
 2. **New Access Token** → Description: `github-actions`
 3. Permissions: **Read & Write**
-4. **Generate** → tokenni nusxalang (faqat bir marta ko'rinadi!)
-5. GitHub → `DOCKER_PASSWORD` secretni **o'chiring** va **qayta yarating** — tokenni qo'ying
+4. Copy the token and set it as `DOCKER_PASSWORD`
 
-> `DOCKER_USERNAME` = Docker Hub username: **`kurbanbayef1`**. Email ishlamaydi.
-| `DATABASE_URL` | Render PostgreSQL URL | `postgresql://USER:PASS@HOST/DB?schema=public&sslmode=require` |
-| `EC2_HOST` | EC2 public IP | Faqat IP: `13.45.67.89` (`http://` qo'shmang) |
-| `EC2_USER` | SSH foydalanuvchi | Ubuntu uchun: `ubuntu` |
-| `EC2_SSH_KEY` | `.pem` fayl to'liq matni | `-----BEGIN RSA PRIVATE KEY-----` dan boshlab |
-| `JWT_SECRET` | Tasodifiy 32+ belgi | `openssl rand -base64 32` natijasi |
-
-## JWT_SECRET yaratish
-
-EC2 yoki lokal terminalda:
+### JWT_SECRET
 
 ```bash
 openssl rand -base64 32
 ```
 
-Chiqgan qiymatni `JWT_SECRET` ga qo'ying.
+### EC2_SSH_KEY
 
-## EC2_SSH_KEY qanday olinadi
+Open your AWS `.pem` file and copy the entire contents into the secret.
 
-AWS dan yuklab olgan `.pem` faylni matn muharririda oching va **butun** mazmunini nusxalang:
+### DATABASE_URL
 
-```
------BEGIN RSA PRIVATE KEY-----
-MIIEowIBAAKCAQEA...
-...
------END RSA PRIVATE KEY-----
-```
+Render dashboard → PostgreSQL → **External Database URL**
 
-## DATABASE_URL namunasi
+### APP_DOMAIN
 
-```
-postgresql://USER:PASSWORD@HOST.oregon-postgres.render.com/DATABASE?schema=public&sslmode=require
+Your production subdomain. The workflow sets:
+
+```env
+CORS_ORIGIN=https://kiyim-chechak.kahoot.uz
 ```
 
-Render dashboard → PostgreSQL → **External Database URL** dan nusxalang.
+If you change domains, update this secret and redeploy.
 
-## Tekshirish
+## What happens on push to `master` / `main`
 
-Secretlar to'g'ri bo'lsa, `master` branchga push qilganda GitHub Actions avtomatik:
-
-1. Docker image build qiladi
-2. `kurbanbayef1/kiyim-chechak-backend` va `kurbanbayef1/kiyim-chechak-frontend` ga push qiladi
-3. EC2 ga SSH orqali ulanib `docker compose up -d` ishga tushiradi
+1. Build backend and frontend Docker images
+2. Push to `${DOCKER_USERNAME}/kiyim-chechak-backend` and `...-frontend` on Docker Hub
+3. SSH to EC2
+4. Install Docker + host Nginx (first run only)
+5. Write `deploy/.env` with production values
+6. Install Nginx config for your domain → proxy to `localhost:8080`
+7. `docker compose pull && up -d`
+8. Run `prisma migrate deploy` in the backend container
+9. Health-check `https://APP_DOMAIN/api/health`
 
 Actions tab: `https://github.com/kurbanbayefoo6-dev/kiyim_chechak_fullstack/actions`
 
-## Push xatosi (`denied: requested access to the resource is denied`)
+Full deploy guide: [DOCKER-DEPLOY.md](DOCKER-DEPLOY.md)
 
-Bu xato login muvaffaqiyatli, lekin **boshqa namespace** ga push qilishga urinilganda chiqadi.
+## Docker Hub push denied
 
-| Sabab | Yechim |
-|-------|--------|
-| `DOCKER_USERNAME` noto'g'ri | [hub.docker.com/settings/general](https://hub.docker.com/settings/general) → **Username** ni aniq nusxalang |
-| Token faqat Read | Yangi token — **Read & Write** permission |
-| Image nomi boshqa userga tegishli | Workflow endi `${{ secrets.DOCKER_USERNAME }}/...` ishlatadi — username to'g'ri bo'lishi kerak |
+| Cause | Fix |
+|-------|-----|
+| Wrong `DOCKER_USERNAME` | Copy exact username from [Docker Hub settings](https://hub.docker.com/settings/general) |
+| Token is Read-only | Create new token with **Read & Write** |
+| Repositories missing | Create `kiyim-chechak-backend` and `kiyim-chechak-frontend` on Docker Hub |
 
-`DOCKER_USERNAME` = Docker Hub dagi aniq username: **`kurbanbayef1`**.
+## Docker login unauthorized
 
-Agar xato davom etsa, Docker Hub da qo'lda repository yarating:
-- `https://hub.docker.com/repositories/create` → `kiyim-chechak-backend` (Public)
-- Yana bir marta → `kiyim-chechak-frontend` (Public)
+| Cause | Fix |
+|-------|-----|
+| Plain password used | Use Access Token |
+| Email instead of username | Use Docker Hub username |
+| Extra whitespace in secret | Delete and recreate the secret |
+| 2FA enabled | Access Token required |
 
-Keyin workflow ni **Re-run** qiling.
-
-## Docker login xatosi (`unauthorized`)
-
-| Sabab | Yechim |
-|-------|--------|
-| Oddiy parol ishlatilgan | **Access Token** ishlating (yuqoridagi qadam) |
-| Username noto'g'ri | Email emas — Docker Hub **username** qo'ying |
-| Bo'sh joy / yangi qator | Secretni o'chirib, qayta yarating (copy-paste da ortiqcha bo'shliq bo'lmasin) |
-| 2FA yoqilgan | Faqat Access Token ishlaydi |
-| Token faqat Read | **Read & Write** permission bilan yangi token yarating |
-
-Lokal tekshirish (kompyuteringizda):
+Local test:
 
 ```bash
 docker logout
 docker login -u kurbanbayef1
-# Password o'rniga Access Token kiriting
+# Enter Access Token as password
 ```
+
+## SSL / Certbot (one-time on server)
+
+After the first CI/CD deploy succeeds over HTTP:
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d kiyim-chechak.kahoot.uz
+```
+
+CORS is already configured for HTTPS by the workflow.

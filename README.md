@@ -18,13 +18,20 @@ Each package has its own `package.json`; run `npm install` and npm scripts from 
 
 ## AWS EC2 Deploy
 
-### Docker + GitHub Actions (tavsiya etiladi)
+### Docker + GitHub Actions (recommended)
 
-`master` ga push qilganda avtomatik:
-1. Docker image build → [Docker Hub](https://hub.docker.com/u/kurbanbayef1)
-2. EC2 ga SSH → `docker compose up -d`
+Domain: `https://kiyim-chechak.kahoot.uz`
 
-**GitHub Secrets sozlash:** [deploy/GITHUB-SECRETS.md](deploy/GITHUB-SECRETS.md)
+On push to `master` / `main`:
+
+1. Docker images build → [Docker Hub](https://hub.docker.com/u/kurbanbayef1)
+2. EC2 deploy via SSH → host Nginx + `docker compose up -d`
+3. Prisma migrations run automatically
+
+**Guides:**
+
+- [deploy/DOCKER-DEPLOY.md](deploy/DOCKER-DEPLOY.md) — full Docker + domain + Certbot setup
+- [deploy/GITHUB-SECRETS.md](deploy/GITHUB-SECRETS.md) — required GitHub secrets (including `APP_DOMAIN`)
 
 ### Qo'lda (Nginx + systemd)
 
