@@ -7,7 +7,7 @@ import { SidebarNav, buildDefaultNavItems } from '@/components/layout/SidebarNav
 import { Button } from '@/components/common/Button'
 
 const brand = {
-  name: 'KiyimChechak',
+  name: 'Retake chechak',
   tagline: 'Wholesale ERP • CRM • WMS',
 }
 
