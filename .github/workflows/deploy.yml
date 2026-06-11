@@ -60,7 +60,7 @@ jobs:
             APP_DIR="/var/www/kiyim-chechak"
             DEPLOY_DIR="${APP_DIR}/deploy"
             APP_DOMAIN="${{ secrets.APP_DOMAIN }}"
-            CORS_ORIGIN="https://${APP_DOMAIN}"
+            CORS_ORIGIN="http://${APP_DOMAIN},https://${APP_DOMAIN}"
             APP_USER="$(id -un)"
             APP_GROUP="$(id -gn)"
 
